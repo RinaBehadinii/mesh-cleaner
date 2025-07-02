@@ -1,1 +1,1 @@
-pymeshlab==2023.12.0
+pymeshlab~=2023.12.post3
