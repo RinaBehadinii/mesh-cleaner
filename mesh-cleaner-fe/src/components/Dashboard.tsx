@@ -1,8 +1,9 @@
-import {useEffect, useState} from "react";
+import {useState} from "react";
 
 export function Dashboard() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
+    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -19,18 +20,34 @@ export function Dashboard() {
         e.preventDefault();
     };
 
-    useEffect(() => {
-        fetch("http://localhost:8000/clean-mesh", {
-            method: "POST",
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                console.log("API response:", data.message);
-            })
-            .catch((err) => {
-                console.error("API error:", err);
+    const handleUpload = async () => {
+        if (!selectedFile) return;
+
+        setLogs((prev) => [...prev, "Uploading file..."]);
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+            const res = await fetch("http://localhost:8000/clean-mesh", {
+                method: "POST",
+                body: formData,
             });
-    }, []);
+
+            if (!res.ok) {
+                const err = await res.json();
+                setLogs((prev) => [...prev, `Error: ${err.error || res.statusText}`]);
+                return;
+            }
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            setDownloadUrl(url);
+            setLogs((prev) => [...prev, "Cleaned mesh received successfully"]);
+        } catch (error) {
+            setLogs((prev) => [...prev, `Error: ${String(error)}`]);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 px-6 py-10 text-gray-800 font-sans">
@@ -45,9 +62,7 @@ export function Dashboard() {
                 </header>
 
                 <section className="bg-white p-8 rounded-2xl shadow-lg space-y-5">
-                    <h2 className="text-2xl font-semibold text-purple-700">
-                        1. Upload Mesh
-                    </h2>
+                    <h2 className="text-2xl font-semibold text-purple-700">1. Upload Mesh</h2>
                     <div
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
@@ -63,16 +78,20 @@ export function Dashboard() {
                         className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200"
                     />
                     {selectedFile && (
-                        <p className="text-sm text-purple-600 mt-2 font-medium">
-                            Selected: {selectedFile.name}
-                        </p>
+                        <div className="text-sm text-purple-600 mt-2 font-medium flex items-center justify-between">
+                            <span>Selected: {selectedFile.name}</span>
+                            <button
+                                onClick={handleUpload}
+                                className="ml-4 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition"
+                            >
+                                Upload & Clean
+                            </button>
+                        </div>
                     )}
                 </section>
 
                 <section className="bg-white p-8 rounded-2xl shadow-lg space-y-5">
-                    <h2 className="text-2xl font-semibold text-purple-700">
-                        2. Processing Logs
-                    </h2>
+                    <h2 className="text-2xl font-semibold text-purple-700">2. Processing Logs</h2>
                     <div
                         className="bg-purple-50 rounded-md p-5 h-52 overflow-y-auto text-sm font-mono whitespace-pre-wrap border border-purple-200">
                         {logs.length > 0
@@ -87,22 +106,16 @@ export function Dashboard() {
                         The cleaned mesh is ready. You can:
                     </p>
                     <div className="flex justify-center mt-4 gap-4 flex-wrap">
-                        <button
-                            className="bg-purple-600 text-white hover:bg-purple-700 px-6 py-2 rounded-lg text-sm font-semibold transition"
-                            onClick={() => {
-                                // Handle download logic here
-                            }}
-                        >
-                            Download Cleaned Mesh
-                        </button>
-                        <button
-                            className="bg-white border border-purple-600 text-purple-700 hover:bg-purple-50 px-6 py-2 rounded-lg text-sm font-semibold transition"
-                            onClick={() => {
-                                // Handle open in MeshLab logic here
-                            }}
-                        >
-                            Open in MeshLab
-                        </button>
+                        {downloadUrl && (
+                            <a
+                                href={downloadUrl}
+                                download={selectedFile?.name.replace(".obj", "_cleaned.obj")}
+                                className="bg-purple-600 text-white hover:bg-purple-700 px-6 py-2 rounded-lg text-sm font-semibold transition"
+                            >
+                                Download Cleaned Mesh
+                            </a>
+                        )}
+                        {/* MeshLab opening is out of scope unless you have local integrations */}
                     </div>
                 </section>
             </div>

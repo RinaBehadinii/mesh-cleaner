@@ -1,8 +1,9 @@
 import pymeshlab
-from pipeline.cleanup import run_advanced_cleanup
-from pipeline.hole_filling import run_hole_filling
-from pipeline.smoothing import run_smoothing
-from pipeline.simplification import run_simplification
+from .cleanup import run_advanced_cleanup
+from .hole_filling import run_hole_filling
+from .smoothing import run_smoothing
+from .simplification import run_simplification
+
 
 def run_all_filters(ms: pymeshlab.MeshSet, *, photogrammetry: bool = False):
     run_advanced_cleanup(ms)

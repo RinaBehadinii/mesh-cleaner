@@ -1,1 +1,4 @@
+fastapi
+uvicorn
+python-multipart
 pymeshlab~=2023.12.post3

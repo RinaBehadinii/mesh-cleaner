@@ -1,7 +1,15 @@
-from pipeline.runner import process_mesh
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from routes import router
 
-input_file = 'meshes/input/example.obj'
-output_file = 'meshes/output/processed_example.obj'
+app = FastAPI()
 
-if __name__ == "__main__":
-    process_mesh(input_file, output_file)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(router)
