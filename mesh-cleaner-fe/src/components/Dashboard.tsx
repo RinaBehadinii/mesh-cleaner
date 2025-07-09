@@ -8,6 +8,7 @@ export function Dashboard() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
     const handleUpload = async () => {
         if (!selectedFile) return;
 
@@ -28,7 +29,18 @@ export function Dashboard() {
                 return;
             }
 
-            const blob = await res.blob();
+            const result = await res.json();
+            console.log("Logs from backend:", result.logs);
+
+            if (Array.isArray(result.logs)) {
+                setLogs((prev) => [...prev, ...result.logs]);
+            }
+
+            const byteCharacters = atob(result.filedata);
+            const byteNumbers = Array.from(byteCharacters).map(char => char.charCodeAt(0));
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], {type: "application/octet-stream"});
+
             const url = window.URL.createObjectURL(blob);
             setDownloadUrl(url);
             setLogs((prev) => [...prev, "Cleaned mesh received successfully"]);

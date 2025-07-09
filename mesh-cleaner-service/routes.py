@@ -1,8 +1,9 @@
-from fastapi import APIRouter, File, UploadFile, BackgroundTasks
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, File, UploadFile, BackgroundTasks, HTTPException
+from fastapi.responses import JSONResponse
 import os
+import base64
 from uuid import uuid4
-from pipeline.runner import process_mesh
+from pipeline.runner import process_mesh_and_capture_logs
 
 router = APIRouter()
 
@@ -14,29 +15,45 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 @router.post("/clean-mesh")
-async def clean_mesh(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def clean_mesh(
+        file: UploadFile = File(...),
+        background_tasks: BackgroundTasks = BackgroundTasks(),
+):
     unique_name = uuid4().hex
     input_filename = f"{unique_name}_{file.filename}"
     input_path = os.path.join(UPLOAD_DIR, input_filename)
 
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
+    try:
+        with open(input_path, "wb") as f:
+            f.write(await file.read())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save input file: {e}")
 
     output_filename = f"processed_{input_filename}"
     output_path = os.path.join(OUTPUT_DIR, output_filename)
 
-    process_mesh(input_path, output_path)
+    try:
+        logs = process_mesh_and_capture_logs(input_path, output_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Mesh processing failed: {e}")
 
     if not os.path.exists(output_path):
-        raise RuntimeError(f"Processed file not found at {output_path}")
+        raise HTTPException(status_code=500, detail=f"Processed file not found at {output_path}")
+
+    try:
+        with open(output_path, "rb") as f:
+            file_data = base64.b64encode(f.read()).decode("utf-8")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read output file: {e}")
 
     background_tasks.add_task(clean_files, [input_path, output_path])
 
-    return FileResponse(
-        path=output_path,
-        media_type="application/octet-stream",
-        filename=output_filename,
-        background=background_tasks
+    return JSONResponse(
+        content={
+            "filename": output_filename,
+            "filedata": file_data,
+            "logs": logs,
+        }
     )
 
 
