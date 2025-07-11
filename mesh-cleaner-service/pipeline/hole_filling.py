@@ -1,34 +1,41 @@
 import pymeshlab
+from .logging_utils import StepLogger
 
 
-def run_hole_filling(ms: pymeshlab.MeshSet, max_hole_size: int = 100, logs: list[str] | None = None):
-    log = logs.append if logs is not None else lambda x: None
+def run_hole_filling(ms: pymeshlab.MeshSet, max_hole_size: int = 100, logger: StepLogger = None):
+    if logger is None:
+        return
 
-    log("Running surface completion...")
+    logger.add_step(action="hole_filling", step="Surface Completion", result="Started")
 
-    v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
+    v = ms.current_mesh().vertex_number()
+    f = ms.current_mesh().face_number()
+
     try:
         ms.apply_filter("meshing_close_holes", maxholesize=max_hole_size)
         after_v = ms.current_mesh().vertex_number()
         after_f = ms.current_mesh().face_number()
 
-        print("Close Holes:")
-        print(f"  Vertices: {v} → {after_v}")
-        print(f"  Faces:    {f} → {after_f}")
-        log("Close Holes:")
-        log(f"  Vertices: {v} → {after_v}")
-        log(f"  Faces:    {f} → {after_f}")
+        result = "Holes filled" if after_f > f else "No change"
 
-        if after_f > f:
-            print("   Holes filled\n")
-            log("   Holes filled\n")
-        else:
-            print("No change\n")
-            log("No change\n")
+        logger.add_step(
+            action="hole_filling",
+            step="Close Holes",
+            input_vertices=v,
+            output_vertices=after_v,
+            input_faces=f,
+            output_faces=after_f,
+            result=result
+        )
+
     except pymeshlab.PyMeshLabException as e:
-        print(f"  Skipped: {e}\n")
-        log(f"  Skipped: {e}\n")
+        logger.add_step(
+            action="hole_filling",
+            step="Close Holes",
+            input_vertices=v,
+            input_faces=f,
+            result=f"Skipped: {e}"
+        )
 
     ms.compute_normal_per_vertex()
-    print("Recomputed vertex normals\n")
-    log("Recomputed vertex normals\n")
+    logger.add_step(action="hole_filling", step="Recompute Vertex Normals", result="Completed")

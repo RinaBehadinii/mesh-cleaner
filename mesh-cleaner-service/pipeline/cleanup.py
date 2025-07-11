@@ -1,31 +1,26 @@
 import pymeshlab
+from .logging_utils import StepLogger
 
 
-def run_advanced_cleanup(ms: pymeshlab.MeshSet, logs: list[str] | None = None):
-    print("Running advanced cleanup...")
-    if logs is not None:
-        logs.append("Running advanced cleanup...")
+def run_advanced_cleanup(ms: pymeshlab.MeshSet, logger: StepLogger):
+    logger.add_step(action="cleanup", step="Advanced Cleanup", result="Started")
 
     def log_change(name: str, before_v: int, before_f: int):
         after_v = ms.current_mesh().vertex_number()
         after_f = ms.current_mesh().face_number()
 
-        print(f"{name}:")
-        print(f"  Vertices: {before_v} → {after_v}")
-        print(f"  Faces:    {before_f} → {after_f}")
-        if logs is not None:
-            logs.append(f"{name}:")
-            logs.append(f"  Vertices: {before_v} → {after_v}")
-            logs.append(f"  Faces:    {before_f} → {after_f}")
+        changed = (before_v != after_v or before_f != after_f)
+        result = "Changes detected" if changed else "No change"
 
-        if before_v == after_v and before_f == after_f:
-            print("  No change\n")
-            if logs is not None:
-                logs.append("  No change\n")
-        else:
-            print("  Changes detected\n")
-            if logs is not None:
-                logs.append("  Changes detected\n")
+        logger.add_step(
+            action="cleanup",
+            step=name,
+            input_vertices=before_v,
+            output_vertices=after_v,
+            input_faces=before_f,
+            output_faces=after_f,
+            result=result
+        )
 
     v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
     ms.apply_filter("meshing_remove_duplicate_vertices")

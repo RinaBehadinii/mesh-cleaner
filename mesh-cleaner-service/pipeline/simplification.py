@@ -1,4 +1,5 @@
 import pymeshlab
+from .logging_utils import StepLogger
 
 
 def get_bounding_box_dimensions(ms: pymeshlab.MeshSet):
@@ -9,23 +10,15 @@ def get_bounding_box_dimensions(ms: pymeshlab.MeshSet):
     return tuple(dims)
 
 
-def run_simplification(ms: pymeshlab.MeshSet, logs: list[str] = None):
-    if logs is None:
-        logs = []
+def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
+    if logger is None:
+        return
 
-    print("Simplifying mesh...")
-    logs.append("Simplifying mesh...")
+    logger.add_step(action="simplification", step="Simplifying mesh", result="Started")
 
     initial_faces = ms.current_mesh().face_number()
     initial_vertices = ms.current_mesh().vertex_number()
     initial_bbox = get_bounding_box_dimensions(ms)
-
-    print(f"Faces before:   {initial_faces}")
-    print(f"Vertices before: {initial_vertices}")
-    print(f"Bounding box (x, y, z): {initial_bbox}")
-    logs.append(f"Faces before:   {initial_faces}")
-    logs.append(f"Vertices before: {initial_vertices}")
-    logs.append(f"Bounding box (x, y, z): {initial_bbox}")
 
     try:
         ms.apply_filter(
@@ -38,22 +31,30 @@ def run_simplification(ms: pymeshlab.MeshSet, logs: list[str] = None):
         final_vertices = ms.current_mesh().vertex_number()
         final_bbox = get_bounding_box_dimensions(ms)
 
-        print(f"Faces after:    {final_faces}")
-        print(f"Vertices after: {final_vertices}")
-        print(f"Bounding box (x, y, z): {final_bbox}")
-        logs.append(f"Faces after:    {final_faces}")
-        logs.append(f"Vertices after: {final_vertices}")
-        logs.append(f"Bounding box (x, y, z): {final_bbox}")
+        result = (
+            "Simplification successful"
+            if final_faces < initial_faces
+            else "Simplification had no effect (face count not reduced)"
+        )
 
-        if final_faces < initial_faces:
-            msg = "Simplification successful\n"
-        else:
-            msg = "Simplification had no effect (face count not reduced)\n"
-
-        print(msg)
-        logs.append(msg.strip())
+        logger.add_step(
+            action="simplification",
+            step="Quadric Edge Collapse",
+            input_vertices=initial_vertices,
+            output_vertices=final_vertices,
+            input_faces=initial_faces,
+            output_faces=final_faces,
+            bounding_box_before=initial_bbox,
+            bounding_box_after=final_bbox,
+            result=result
+        )
 
     except pymeshlab.PyMeshLabException as e:
-        err_msg = f"Simplification skipped: {e}\n"
-        print(err_msg)
-        logs.append(err_msg.strip())
+        logger.add_step(
+            action="simplification",
+            step="Quadric Edge Collapse",
+            input_vertices=initial_vertices,
+            input_faces=initial_faces,
+            bounding_box_before=initial_bbox,
+            result=f"Skipped: {e}"
+        )

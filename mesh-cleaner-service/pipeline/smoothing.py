@@ -1,4 +1,5 @@
 import pymeshlab
+from .logging_utils import StepLogger
 
 
 def get_bounding_box(ms: pymeshlab.MeshSet):
@@ -11,34 +12,40 @@ def get_bounding_box(ms: pymeshlab.MeshSet):
     )
 
 
-def run_smoothing(ms: pymeshlab.MeshSet, photogrammetry: bool = False, logs: list[str] = None):
-    if logs is None:
-        logs = []
-
-    logs.append("Smoothing surface...")
-    print("Smoothing surface...")
+def run_smoothing(ms: pymeshlab.MeshSet, photogrammetry: bool = False, logger: StepLogger = None):
+    if logger is None:
+        return
 
     try:
-        before = get_bounding_box(ms)
+        before_bbox = get_bounding_box(ms)
 
         ms.apply_coord_hc_laplacian_smoothing()
-        logs.append("Applied HC Laplacian smoothing")
-        print("Applied HC Laplacian smoothing")
+        after_bbox = get_bounding_box(ms)
+
+        logger.add_step(
+            action="smoothing",
+            step="HC Laplacian Smoothing",
+            bounding_box_before=before_bbox,
+            bounding_box_after=after_bbox,
+            result="Applied HC Laplacian smoothing"
+        )
 
         if photogrammetry:
+            before_bbox = get_bounding_box(ms)
             ms.apply_coord_laplacian_smoothing_surface_preserving()
-            logs.append("Applied Surface-Preserving smoothing")
-            print("Applied Surface-Preserving smoothing")
+            after_bbox = get_bounding_box(ms)
 
-        after = get_bounding_box(ms)
-
-        if before != after:
-            logs.append("Smoothing changed the geometry (bounding box updated)\n")
-            print("Smoothing changed the geometry (bounding box updated)\n")
-        else:
-            logs.append("No geometric change detected after smoothing\n")
-            print("No geometric change detected after smoothing\n")
+            logger.add_step(
+                action="smoothing",
+                step="Surface-Preserving Smoothing",
+                bounding_box_before=before_bbox,
+                bounding_box_after=after_bbox,
+                result="Applied Surface-Preserving smoothing"
+            )
 
     except pymeshlab.PyMeshLabException as e:
-        logs.append(f"Smoothing skipped: {e}\n")
-        print(f"Smoothing skipped: {e}\n")
+        logger.add_step(
+            action="smoothing",
+            step="Smoothing",
+            result=f"Skipped: {e}"
+        )
