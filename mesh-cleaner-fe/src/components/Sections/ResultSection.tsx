@@ -8,7 +8,7 @@ export function ResultSection({downloadUrl, selectedFile}: ResultSectionProps) {
 
     return (
         <div className="bg-white p-8 rounded-2xl shadow-lg space-y-5">
-            <h2 className="text-2xl font-semibold text-purple-700">3. Result</h2>
+            <h2 className="text-2xl font-semibold text-purple-700">4. Result</h2>
             <p className="text-sm text-center text-gray-600">
                 {disabled
                     ? "No cleaned mesh available yet."

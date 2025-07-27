@@ -20,7 +20,7 @@ export function ProcessingHistorySection() {
     return (
         <div className="bg-white p-8 rounded-2xl shadow-lg space-y-5">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-purple-700">2. Processing History</h2>
+                <h2 className="text-2xl font-semibold text-purple-700">3. Processing History</h2>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="text-lg font-bold text-purple-700 hover:underline"
@@ -28,7 +28,6 @@ export function ProcessingHistorySection() {
                     {isOpen ? "-" : "+"}
                 </button>
             </div>
-
 
             {isOpen && (
                 <div className="max-h-96 overflow-y-auto border border-purple-200 rounded-md">
@@ -44,22 +43,51 @@ export function ProcessingHistorySection() {
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Filename</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Input Faces</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Output Faces</th>
+                                <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Δ Faces</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Input Vertices</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Output Vertices</th>
+                                <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Δ Vertices</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Timestamp</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {history.map((log, idx) => (
-                                <tr key={idx} className="hover:bg-purple-50">
-                                    <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[200px]">{log.filename}</td>
-                                    <td className="px-2 py-1 border-b border-gray-200">{log.input_faces}</td>
-                                    <td className="px-2 py-1 border-b border-gray-200">{log.output_faces}</td>
-                                    <td className="px-2 py-1 border-b border-gray-200">{log.input_vertices}</td>
-                                    <td className="px-2 py-1 border-b border-gray-200">{log.output_vertices}</td>
-                                    <td className="px-2 py-1 border-b border-gray-200">{new Date(log.timestamp || "").toLocaleString()}</td>
-                                </tr>
-                            ))}
+                            {history.map((log, idx) => {
+                                const deltaFaces =
+                                    typeof log.input_faces === "number" && typeof log.output_faces === "number"
+                                        ? log.input_faces - log.output_faces
+                                        : "–";
+
+                                const deltaVertices =
+                                    typeof log.input_vertices === "number" &&
+                                    typeof log.output_vertices === "number"
+                                        ? log.input_vertices - log.output_vertices
+                                        : "–";
+
+                                return (
+                                    <tr key={idx} className="hover:bg-purple-50">
+                                        <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[200px]">
+                                            {log.filename}
+                                        </td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{log.input_faces}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{log.output_faces}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{deltaFaces}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{log.input_vertices}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{log.output_vertices}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{deltaVertices}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">
+                                            {new Date(log.timestamp || "")
+                                                .toLocaleString("en-GB", {
+                                                    day: "2-digit",
+                                                    month: "2-digit",
+                                                    year: "numeric",
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    hour12: false,
+                                                })}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                             </tbody>
                         </table>
                     )}

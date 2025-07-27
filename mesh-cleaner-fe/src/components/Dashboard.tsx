@@ -10,21 +10,13 @@ export function Dashboard() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [logs, setLogs] = useState<StructuredLog[]>([]);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const handleUpload = async () => {
         if (!selectedFile) return;
 
-        setLogs([
-            {
-                action: "client",
-                step: "Upload",
-                result: "Uploading file...",
-                input_vertices: null,
-                output_vertices: null,
-                input_faces: null,
-                output_faces: null,
-            },
-        ]);
+        setIsProcessing(true);
+        setLogs([]);
 
         const formData = new FormData();
         formData.append("file", selectedFile);
@@ -37,6 +29,7 @@ export function Dashboard() {
 
             if (!res.ok) {
                 const err = await res.json();
+                setIsProcessing(false);
                 setLogs((prev) => [
                     ...prev,
                     {
@@ -53,14 +46,16 @@ export function Dashboard() {
             }
 
             const result = await res.json();
-
+            setIsProcessing(false);
 
             if (Array.isArray(result.logs)) {
-                setLogs((prev) => [...prev, ...result.logs]);
+                setLogs(result.logs);
             }
 
             const byteCharacters = atob(result.filedata);
-            const byteNumbers = Array.from(byteCharacters).map(char => char.charCodeAt(0));
+            const byteNumbers = Array.from(byteCharacters).map((char) =>
+                char.charCodeAt(0)
+            );
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], {type: "application/octet-stream"});
 
@@ -79,6 +74,7 @@ export function Dashboard() {
                 },
             ]);
         } catch (error) {
+            setIsProcessing(false);
             setLogs((prev) => [
                 ...prev,
                 {
@@ -111,9 +107,8 @@ export function Dashboard() {
                     onDragOver={(e) => e.preventDefault()}
                 />
 
-                <ProcessingLogsSection logs={logs}/>
+                <ProcessingLogsSection logs={logs} isProcessing={isProcessing}/>
                 <ProcessingHistorySection/>
-
 
                 <ResultSection downloadUrl={downloadUrl} selectedFile={selectedFile}/>
             </div>
