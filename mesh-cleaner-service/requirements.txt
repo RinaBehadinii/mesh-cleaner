@@ -2,3 +2,5 @@ fastapi
 uvicorn
 python-multipart
 pymeshlab~=2023.12.post3
+sqlalchemy
+psycopg2-binary

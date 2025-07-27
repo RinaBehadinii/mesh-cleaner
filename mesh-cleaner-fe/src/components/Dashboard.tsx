@@ -4,6 +4,7 @@ import {UploadMeshSection} from "./Sections/UploadMeshSection";
 import {ProcessingLogsSection} from "./Sections/ProcessingLogsSection";
 import {ResultSection} from "./Sections/ResultSection";
 import {StructuredLog} from "../types";
+import {ProcessingHistorySection} from "./Sections/ProcessingHistorySection";
 
 export function Dashboard() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -111,6 +112,7 @@ export function Dashboard() {
                 />
 
                 <ProcessingLogsSection logs={logs}/>
+                <ProcessingHistorySection/>
 
 
                 <ResultSection downloadUrl={downloadUrl} selectedFile={selectedFile}/>

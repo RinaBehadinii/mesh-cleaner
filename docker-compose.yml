@@ -10,6 +10,10 @@ services:
     volumes:
       - ./mesh-cleaner-service/meshes:/app/meshes
       - ./mesh-cleaner-service:/mesh-cleaner-service
+    environment:
+      DATABASE_URL: postgresql://user:password@mesh-cleaner-db:5432/meshdb
+    depends_on:
+      - mesh-cleaner-db
 
   mesh-cleaner-frontend:
     container_name: mesh-cleaner-fe
@@ -17,3 +21,19 @@ services:
       context: ./mesh-cleaner-fe
     ports:
       - "3000:80"
+
+  mesh-cleaner-db:
+    container_name: mesh-cleaner-db
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: meshdb
+    volumes:
+      - mesh_cleaner_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  mesh_cleaner_db_data:

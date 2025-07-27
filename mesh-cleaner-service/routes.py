@@ -4,6 +4,8 @@ import os
 import base64
 from uuid import uuid4
 from pipeline.runner import process_mesh_and_capture_logs
+from database import SessionLocal
+from models import MeshLog
 
 router = APIRouter()
 
@@ -46,6 +48,8 @@ async def clean_mesh(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read output file: {e}")
 
+    save_log_to_db(output_filename, logs)
+
     background_tasks.add_task(clean_files, [input_path, output_path])
 
     return JSONResponse(
@@ -57,6 +61,26 @@ async def clean_mesh(
     )
 
 
+@router.get("/logs")
+def get_all_mesh_logs():
+    db = SessionLocal()
+    logs = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
+    db.close()
+
+    return [
+        {
+            "id": log.id,
+            "filename": log.filename,
+            "input_faces": log.input_faces,
+            "output_faces": log.output_faces,
+            "input_vertices": log.input_vertices,
+            "output_vertices": log.output_vertices,
+            "timestamp": log.timestamp.isoformat(),
+        }
+        for log in logs
+    ]
+
+
 def clean_files(paths: list[str]):
     for path in paths:
         try:
@@ -64,3 +88,34 @@ def clean_files(paths: list[str]):
                 os.remove(path)
         except Exception as err:
             print(f"Warning: Failed to delete {path} — {err}")
+
+
+def save_log_to_db(filename: str, logs: list[dict]):
+    if not logs:
+        return
+
+    first = next(
+        (log for log in logs if log.get("input_faces") is not None and log.get("input_vertices") is not None),
+        logs[0]
+    )
+
+    last = next(
+        (log for log in reversed(logs) if
+         log.get("output_faces") is not None and log.get("output_vertices") is not None),
+        logs[-1]
+    )
+
+    db = SessionLocal()
+    entry = MeshLog(
+        filename=filename,
+        input_vertices=first["input_vertices"],
+        output_vertices=last["output_vertices"],
+        input_faces=first["input_faces"],
+        output_faces=last["output_faces"],
+        bounding_box_before=str(first.get("bounding_box_before")),
+        bounding_box_after=str(last.get("bounding_box_after")),
+        logs=logs,
+    )
+    db.add(entry)
+    db.commit()
+    db.close()
