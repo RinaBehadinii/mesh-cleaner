@@ -13,7 +13,7 @@ export function ProcessingLogsSection({logs, isProcessing}: ProcessingLogsSectio
             <div
                 className="bg-purple-50 rounded-md p-5 h-52 overflow-y-auto text-sm font-mono whitespace-pre-wrap border border-purple-200">
                 {isProcessing ? (
-                    <div className="flex text-purple-700">Processing mesh, please
+                    <div className="flex place-self-center items-center h-full text-purple-700">Processing mesh, please
                         wait...</div>
                 ) : logs.length > 0 ? (
                     logs.reduce<JSX.Element[]>((acc, log, idx) => {
@@ -60,7 +60,7 @@ export function ProcessingLogsSection({logs, isProcessing}: ProcessingLogsSectio
                         return acc;
                     }, [])
                 ) : (
-                    "Waiting for file to be processed..."
+                    "Nothing to show yet. Upload a file to generate logs."
                 )}
             </div>
         </div>

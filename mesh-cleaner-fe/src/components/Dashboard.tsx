@@ -12,6 +12,11 @@ export function Dashboard() {
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const onSetSelectedFile = (file: File | null) => {
+        setSelectedFile(file)
+        setLogs([])
+    }
+
     const handleUpload = async () => {
         if (!selectedFile) return;
 
@@ -97,12 +102,12 @@ export function Dashboard() {
 
                 <UploadMeshSection
                     selectedFile={selectedFile}
-                    onFileChange={setSelectedFile}
+                    onFileChange={onSetSelectedFile}
                     onUpload={handleUpload}
                     onDrop={(e) => {
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
-                        if (file) setSelectedFile(file);
+                        if (file) onSetSelectedFile(file);
                     }}
                     onDragOver={(e) => e.preventDefault()}
                 />

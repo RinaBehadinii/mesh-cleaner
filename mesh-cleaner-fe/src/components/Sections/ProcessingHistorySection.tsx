@@ -37,7 +37,7 @@ export function ProcessingHistorySection() {
                         <div className="p-4 text-sm text-gray-500">No logs available</div>
                     ) : (
                         <table
-                            className="min-w-full table-fixed border-collapse border-spacing-0 text-sm text-left font-mono bg-white">
+                            className="min-w-full table-fixed border-separate border-spacing-0 text-sm text-left font-mono bg-white">
                             <thead className="bg-purple-100 sticky top-0 z-20">
                             <tr>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Filename</th>
