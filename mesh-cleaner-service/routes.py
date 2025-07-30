@@ -49,7 +49,6 @@ async def clean_mesh(
         raise HTTPException(status_code=500, detail=f"Failed to read output file: {e}")
 
     save_log_to_db(output_filename, logs)
-
     background_tasks.add_task(clean_files, [input_path, output_path])
 
     return JSONResponse(
@@ -64,23 +63,20 @@ async def clean_mesh(
 @router.get("/logs")
 def get_all_mesh_logs():
     db = SessionLocal()
-    logs = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
-    db.close()
-
-    return JSONResponse(content=[
-        {
-            "id": log.id,
-            "filename": log.filename,
-            "input_faces": log.input_faces,
-            "output_faces": log.output_faces,
-            "input_vertices": log.input_vertices,
-            "output_vertices": log.output_vertices,
-            "bounding_box_before": log.bounding_box_before,
-            "bounding_box_after": log.bounding_box_after,
-            "timestamp": log.timestamp.isoformat(),
-        }
-        for log in logs
-    ])
+    try:
+        logs = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
+        return JSONResponse(content=[
+            {
+                "id": log.id,
+                "filename": log.filename,
+                "timestamp": log.timestamp.isoformat(),
+                "mesh_stats": log.mesh_stats,
+                "bounding_box": log.bounding_box,
+            }
+            for log in logs
+        ])
+    finally:
+        db.close()
 
 
 def clean_files(paths: list[str]):
@@ -107,21 +103,50 @@ def save_log_to_db(filename: str, logs: list[dict]):
         logs[-1]
     )
 
-    bounding_box_before = next((log["bounding_box_before"] for log in logs if "bounding_box_before" in log), None)
-    bounding_box_after = next((log["bounding_box_after"] for log in reversed(logs) if "bounding_box_after" in log),
+    mesh_stats = {
+        "faces": {
+            "input": first["input_faces"],
+            "output": last["output_faces"]
+        },
+        "vertices": {
+            "input": first["input_vertices"],
+            "output": last["output_vertices"]
+        }
+    }
+
+    bounding_box_before = next((log.get("bounding_box_before") for log in logs if "bounding_box_before" in log), None)
+    bounding_box_after = next((log.get("bounding_box_after") for log in reversed(logs) if "bounding_box_after" in log),
                               None)
 
+    bounding_box = None
+    if bounding_box_before and isinstance(bounding_box_before, (list, tuple)) and len(bounding_box_before) == 6:
+        min_x, min_y, min_z, max_x, max_y, max_z = bounding_box_before
+        bounding_box = {
+            "before": {
+                "min_x": min_x, "min_y": min_y, "min_z": min_z,
+                "max_x": max_x, "max_y": max_y, "max_z": max_z
+            }
+        }
+
+    if bounding_box_after and isinstance(bounding_box_after, (list, tuple)) and len(bounding_box_after) == 3:
+        width, height, depth = bounding_box_after
+        if bounding_box is None:
+            bounding_box = {}
+        bounding_box["after"] = {
+            "width": width, "height": height, "depth": depth
+        }
+
     db = SessionLocal()
-    entry = MeshLog(
-        filename=filename,
-        input_vertices=first["input_vertices"],
-        output_vertices=last["output_vertices"],
-        input_faces=first["input_faces"],
-        output_faces=last["output_faces"],
-        bounding_box_before=str(bounding_box_before) if bounding_box_before else None,
-        bounding_box_after=str(bounding_box_after) if bounding_box_after else None,
-        logs=logs,
-    )
-    db.add(entry)
-    db.commit()
-    db.close()
+    try:
+        entry = MeshLog(
+            filename=filename,
+            mesh_stats=mesh_stats,
+            bounding_box=bounding_box,
+            logs=logs,
+        )
+        db.add(entry)
+        db.commit()
+    except Exception as e:
+        print(f"Error saving mesh log to DB: {e}")
+    finally:
+        db.close()

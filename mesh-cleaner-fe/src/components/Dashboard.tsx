@@ -3,12 +3,12 @@ import {Header} from "./Sections/Header";
 import {UploadMeshSection} from "./Sections/UploadMeshSection";
 import {ProcessingLogsSection} from "./Sections/ProcessingLogsSection";
 import {ResultSection} from "./Sections/ResultSection";
-import {StructuredLog} from "../types";
+import {StepLog} from "../types";
 import {ProcessingHistorySection} from "./Sections/ProcessingHistorySection";
 
 export function Dashboard() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [logs, setLogs] = useState<StructuredLog[]>([]);
+    const [logs, setLogs] = useState<StepLog[]>([]);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 

@@ -1,18 +1,29 @@
 import {useEffect, useState} from "react";
 import {StructuredLog} from "../../types";
 
-function formatBoundingBox(raw?: string | null): string {
-    if (!raw) return "–";
+function formatBoundingBoxBefore(before?: any): string {
+    if (!before) return "–";
 
-    try {
-        const cleaned = raw.replace(/^"|\(|\)|"$/g, "");
-        return cleaned
-            .split(",")
-            .map((v) => parseFloat(v.trim()).toFixed(2))
-            .join(", ");
-    } catch {
-        return raw;
-    }
+    const {min_x, min_y, min_z, max_x, max_y, max_z} = before;
+    return [
+        min_x?.toFixed(2),
+        min_y?.toFixed(2),
+        min_z?.toFixed(2),
+        max_x?.toFixed(2),
+        max_y?.toFixed(2),
+        max_z?.toFixed(2),
+    ].join(", ");
+}
+
+function formatBoundingBoxAfter(after?: any): string {
+    if (!after) return "–";
+
+    const {width, height, depth} = after;
+    return [
+        width?.toFixed(2),
+        height?.toFixed(2),
+        depth?.toFixed(2),
+    ].join(", ");
 }
 
 export function ProcessingHistorySection() {
@@ -68,33 +79,33 @@ export function ProcessingHistorySection() {
                             </thead>
                             <tbody>
                             {history.map((log, idx) => {
-                                const deltaFaces =
-                                    typeof log.input_faces === "number" && typeof log.output_faces === "number"
-                                        ? log.input_faces - log.output_faces
-                                        : "–";
+                                const faces = log.mesh_stats?.faces || {};
+                                const vertices = log.mesh_stats?.vertices || {};
 
-                                const deltaVertices =
-                                    typeof log.input_vertices === "number" &&
-                                    typeof log.output_vertices === "number"
-                                        ? log.input_vertices - log.output_vertices
-                                        : "–";
+                                const deltaFaces = typeof faces.input === "number" && typeof faces.output === "number"
+                                    ? faces.input - faces.output
+                                    : "–";
+
+                                const deltaVertices = typeof vertices.input === "number" && typeof vertices.output === "number"
+                                    ? vertices.input - vertices.output
+                                    : "–";
 
                                 return (
                                     <tr key={idx} className="hover:bg-purple-50">
                                         <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[200px]">
                                             {log.filename}
                                         </td>
-                                        <td className="px-2 py-1 border-b border-gray-200">{log.input_faces}</td>
-                                        <td className="px-2 py-1 border-b border-gray-200">{log.output_faces}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{faces.input ?? "–"}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{faces.output ?? "–"}</td>
                                         <td className="px-2 py-1 border-b border-gray-200">{deltaFaces}</td>
-                                        <td className="px-2 py-1 border-b border-gray-200">{log.input_vertices}</td>
-                                        <td className="px-2 py-1 border-b border-gray-200">{log.output_vertices}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{vertices.input ?? "–"}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200">{vertices.output ?? "–"}</td>
                                         <td className="px-2 py-1 border-b border-gray-200">{deltaVertices}</td>
                                         <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[250px]">
-                                            {formatBoundingBox(log.bounding_box_before)}
+                                            {formatBoundingBoxBefore(log.bounding_box?.before)}
                                         </td>
                                         <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[250px]">
-                                            {formatBoundingBox(log.bounding_box_after)}
+                                            {formatBoundingBoxAfter(log.bounding_box?.after)}
                                         </td>
                                         <td className="px-2 py-1 border-b border-gray-200">
                                             {new Date(log.timestamp || "").toLocaleString("en-GB", {
@@ -117,5 +128,3 @@ export function ProcessingHistorySection() {
         </div>
     );
 }
-
-

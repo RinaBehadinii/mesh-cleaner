@@ -1,8 +1,8 @@
-import {StructuredLog} from "../../types";
+import {StepLog} from "../../types";
 import {JSX} from "react";
 
 type ProcessingLogsSectionProps = {
-    logs: StructuredLog[];
+    logs: StepLog[];
     isProcessing: boolean;
 };
 
