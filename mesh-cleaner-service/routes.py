@@ -67,7 +67,7 @@ def get_all_mesh_logs():
     logs = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
     db.close()
 
-    return [
+    return JSONResponse(content=[
         {
             "id": log.id,
             "filename": log.filename,
@@ -75,10 +75,12 @@ def get_all_mesh_logs():
             "output_faces": log.output_faces,
             "input_vertices": log.input_vertices,
             "output_vertices": log.output_vertices,
+            "bounding_box_before": log.bounding_box_before,
+            "bounding_box_after": log.bounding_box_after,
             "timestamp": log.timestamp.isoformat(),
         }
         for log in logs
-    ]
+    ])
 
 
 def clean_files(paths: list[str]):
@@ -105,6 +107,10 @@ def save_log_to_db(filename: str, logs: list[dict]):
         logs[-1]
     )
 
+    bounding_box_before = next((log["bounding_box_before"] for log in logs if "bounding_box_before" in log), None)
+    bounding_box_after = next((log["bounding_box_after"] for log in reversed(logs) if "bounding_box_after" in log),
+                              None)
+
     db = SessionLocal()
     entry = MeshLog(
         filename=filename,
@@ -112,8 +118,8 @@ def save_log_to_db(filename: str, logs: list[dict]):
         output_vertices=last["output_vertices"],
         input_faces=first["input_faces"],
         output_faces=last["output_faces"],
-        bounding_box_before=str(first.get("bounding_box_before")),
-        bounding_box_after=str(last.get("bounding_box_after")),
+        bounding_box_before=str(bounding_box_before) if bounding_box_before else None,
+        bounding_box_after=str(bounding_box_after) if bounding_box_after else None,
         logs=logs,
     )
     db.add(entry)

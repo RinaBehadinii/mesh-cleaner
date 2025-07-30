@@ -1,6 +1,20 @@
 import {useEffect, useState} from "react";
 import {StructuredLog} from "../../types";
 
+function formatBoundingBox(raw?: string | null): string {
+    if (!raw) return "–";
+
+    try {
+        const cleaned = raw.replace(/^"|\(|\)|"$/g, "");
+        return cleaned
+            .split(",")
+            .map((v) => parseFloat(v.trim()).toFixed(2))
+            .join(", ");
+    } catch {
+        return raw;
+    }
+}
+
 export function ProcessingHistorySection() {
     const [isOpen, setIsOpen] = useState(false);
     const [history, setHistory] = useState<StructuredLog[]>([]);
@@ -47,6 +61,8 @@ export function ProcessingHistorySection() {
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Input Vertices</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Output Vertices</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Δ Vertices</th>
+                                <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">BBox Before</th>
+                                <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">BBox After</th>
                                 <th className="px-2 py-1 border-b border-purple-300 bg-purple-100">Timestamp</th>
                             </tr>
                             </thead>
@@ -74,16 +90,21 @@ export function ProcessingHistorySection() {
                                         <td className="px-2 py-1 border-b border-gray-200">{log.input_vertices}</td>
                                         <td className="px-2 py-1 border-b border-gray-200">{log.output_vertices}</td>
                                         <td className="px-2 py-1 border-b border-gray-200">{deltaVertices}</td>
+                                        <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[250px]">
+                                            {formatBoundingBox(log.bounding_box_before)}
+                                        </td>
+                                        <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[250px]">
+                                            {formatBoundingBox(log.bounding_box_after)}
+                                        </td>
                                         <td className="px-2 py-1 border-b border-gray-200">
-                                            {new Date(log.timestamp || "")
-                                                .toLocaleString("en-GB", {
-                                                    day: "2-digit",
-                                                    month: "2-digit",
-                                                    year: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                    hour12: false,
-                                                })}
+                                            {new Date(log.timestamp || "").toLocaleString("en-GB", {
+                                                day: "2-digit",
+                                                month: "2-digit",
+                                                year: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: false,
+                                            })}
                                         </td>
                                     </tr>
                                 );
@@ -96,3 +117,5 @@ export function ProcessingHistorySection() {
         </div>
     );
 }
+
+

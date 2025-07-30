@@ -24,23 +24,23 @@ def run_advanced_cleanup(ms: pymeshlab.MeshSet, logger: StepLogger):
 
     v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
     ms.apply_filter("meshing_remove_duplicate_vertices")
-    log_change("1. Remove Duplicate Vertices", v, f)
+    log_change("Remove Duplicate Vertices", v, f)
 
     v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
     ms.apply_filter("meshing_remove_unreferenced_vertices")
-    log_change("2. Remove Unreferenced Vertices", v, f)
+    log_change("Remove Unreferenced Vertices", v, f)
 
     v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
     ms.apply_filter("meshing_remove_duplicate_faces")
-    log_change("3. Remove Duplicate Faces", v, f)
+    log_change("Remove Duplicate Faces", v, f)
 
     v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
     ms.apply_filter("meshing_repair_non_manifold_edges", method="Remove Faces")
-    log_change("4. Repair Non-Manifold Edges", v, f)
+    log_change("Repair Non-Manifold Edges", v, f)
 
     v, f = ms.current_mesh().vertex_number(), ms.current_mesh().face_number()
     ms.apply_filter(
         "meshing_remove_connected_component_by_diameter",
         mincomponentdiag=pymeshlab.PercentageValue(1.0)
     )
-    log_change("5. Remove Small Components by Diameter", v, f)
+    log_change("Remove Small Components by Diameter", v, f)

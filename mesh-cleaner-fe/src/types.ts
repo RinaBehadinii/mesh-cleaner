@@ -7,7 +7,7 @@ export type StructuredLog = {
     output_vertices: number | null;
     input_faces: number | null;
     output_faces: number | null;
-    bounding_box_before?: number[];
-    bounding_box_after?: number[];
+    bounding_box_before?: string;
+    bounding_box_after?: string;
     timestamp?: string;
 };
