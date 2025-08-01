@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {StructuredLog} from "../../types";
 
-function formatBoundingBox(box?: any): string {
+export function formatBoundingBox(box?: any): string {
     if (!box) return "–";
     const {width, height, depth} = box;
     return [

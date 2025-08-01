@@ -4,6 +4,7 @@ import os
 import base64
 from uuid import uuid4
 from pipeline.runner import process_mesh_and_capture_logs
+from utils import save_log_to_db, clean_files, transform_logs
 from database import SessionLocal
 from models import MeshLog
 
@@ -49,13 +50,16 @@ async def clean_mesh(
         raise HTTPException(status_code=500, detail=f"Failed to read output file: {e}")
 
     save_log_to_db(output_filename, logs)
+    summary, grouped_logs = transform_logs(logs)
+
     background_tasks.add_task(clean_files, [input_path, output_path])
 
     return JSONResponse(
         content={
             "filename": output_filename,
             "filedata": file_data,
-            "logs": logs,
+            "summary": summary,
+            "logs": grouped_logs,
         }
     )
 
@@ -64,97 +68,16 @@ async def clean_mesh(
 def get_all_mesh_logs():
     db = SessionLocal()
     try:
-        logs = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
+        records = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
         return JSONResponse(content=[
             {
                 "id": log.id,
                 "filename": log.filename,
-                "timestamp": log.timestamp.isoformat(),
+                "timestamp": log.timestamp.isoformat() if log.timestamp else None,
                 "mesh_stats": log.mesh_stats,
                 "bounding_box": log.bounding_box,
             }
-            for log in logs
+            for log in records
         ])
-    finally:
-        db.close()
-
-
-def clean_files(paths: list[str]):
-    for path in paths:
-        try:
-            if os.path.exists(path):
-                os.remove(path)
-        except Exception as err:
-            print(f"Warning: Failed to delete {path} — {err}")
-
-
-def save_log_to_db(filename: str, logs: list[dict]):
-    if not logs:
-        return
-
-    first = next(
-        (log for log in logs
-         if log.get("input_faces") is not None and log.get("input_vertices") is not None),
-        logs[0]
-    )
-    last = next(
-        (log for log in reversed(logs)
-         if log.get("output_faces") is not None and log.get("output_vertices") is not None),
-        logs[-1]
-    )
-
-    mesh_stats = {
-        "faces": {
-            "input": first.get("input_faces"),
-            "output": last.get("output_faces")
-        },
-        "vertices": {
-            "input": first.get("input_vertices"),
-            "output": last.get("output_vertices")
-        }
-    }
-
-    bounding_box_before = next(
-        (log.get("bounding_box_before") for log in logs if log.get("bounding_box_before")),
-        None
-    )
-    bounding_box_after = next(
-        (log.get("bounding_box_after") for log in reversed(logs) if log.get("bounding_box_after")),
-        None
-    )
-
-    bounding_box = None
-    if isinstance(bounding_box_before, (list, tuple)) and len(bounding_box_before) == 3:
-        width_before, height_before, depth_before = bounding_box_before
-        bounding_box = {
-            "before": {
-                "width": width_before,
-                "height": height_before,
-                "depth": depth_before,
-            }
-        }
-
-    if isinstance(bounding_box_after, (list, tuple)) and len(bounding_box_after) == 3:
-        width_after, height_after, depth_after = bounding_box_after
-        if bounding_box is None:
-            bounding_box = {}
-        bounding_box["after"] = {
-            "width": width_after,
-            "height": height_after,
-            "depth": depth_after,
-        }
-
-    db = SessionLocal()
-    try:
-        entry = MeshLog(
-            filename=filename,
-            mesh_stats=mesh_stats,
-            bounding_box=bounding_box,
-            logs=logs,
-        )
-        db.add(entry)
-        db.commit()
-    except Exception as e:
-        print(f"Error saving mesh log to DB: {e}")
     finally:
         db.close()

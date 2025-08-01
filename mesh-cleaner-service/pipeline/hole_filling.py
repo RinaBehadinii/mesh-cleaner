@@ -44,4 +44,8 @@ def run_hole_filling(ms: pymeshlab.MeshSet, max_hole_size: int = 100, logger: St
         )
 
     ms.compute_normal_per_vertex()
-    logger.add_step(action="hole_filling", step="Recompute Vertex Normals", result="Completed")
+    logger.add_step(
+        action="hole_filling",
+        step="Recompute Vertex Normals",
+        result="Completed"
+    )

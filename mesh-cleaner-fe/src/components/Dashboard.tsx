@@ -11,17 +11,36 @@ export function Dashboard() {
     const [logs, setLogs] = useState<StepLog[]>([]);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [summary, setSummary] = useState<any | null>(null);
 
     const onSetSelectedFile = (file: File | null) => {
-        setSelectedFile(file)
-        setLogs([])
-    }
+        setSelectedFile(file);
+        setLogs([]);
+        setSummary(null);
+    };
+
+    const flattenLogs = (logObject: any): StepLog[] => {
+        const allLogs: StepLog[] = [];
+
+        for (const section of Object.keys(logObject)) {
+            const steps = logObject[section];
+            for (const step of steps) {
+                allLogs.push({
+                    action: section,
+                    ...step,
+                });
+            }
+        }
+
+        return allLogs;
+    };
 
     const handleUpload = async () => {
         if (!selectedFile) return;
 
         setIsProcessing(true);
         setLogs([]);
+        setSummary(null);
 
         const formData = new FormData();
         formData.append("file", selectedFile);
@@ -53,31 +72,36 @@ export function Dashboard() {
             const result = await res.json();
             setIsProcessing(false);
 
-            if (Array.isArray(result.logs)) {
-                setLogs(result.logs);
+            setSummary(result.summary || null);
+
+            if (result.logs) {
+                const flattened = flattenLogs(result.logs);
+                setLogs(flattened);
             }
 
-            const byteCharacters = atob(result.filedata);
-            const byteNumbers = Array.from(byteCharacters).map((char) =>
-                char.charCodeAt(0)
-            );
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], {type: "application/octet-stream"});
+            if (result.filedata) {
+                const byteCharacters = atob(result.filedata);
+                const byteNumbers = Array.from(byteCharacters).map((char) =>
+                    char.charCodeAt(0)
+                );
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: "application/octet-stream"});
+                const url = window.URL.createObjectURL(blob);
+                setDownloadUrl(url);
 
-            const url = window.URL.createObjectURL(blob);
-            setDownloadUrl(url);
-            setLogs((prev) => [
-                ...prev,
-                {
-                    action: "client",
-                    step: "Download",
-                    result: "Cleaned mesh received successfully",
-                    input_vertices: null,
-                    output_vertices: null,
-                    input_faces: null,
-                    output_faces: null,
-                },
-            ]);
+                setLogs((prev) => [
+                    ...prev,
+                    {
+                        action: "client",
+                        step: "Download",
+                        result: "Cleaned mesh received successfully",
+                        input_vertices: null,
+                        output_vertices: null,
+                        input_faces: null,
+                        output_faces: null,
+                    },
+                ]);
+            }
         } catch (error) {
             setIsProcessing(false);
             setLogs((prev) => [
@@ -112,10 +136,13 @@ export function Dashboard() {
                     onDragOver={(e) => e.preventDefault()}
                 />
 
-                <ProcessingLogsSection logs={logs} isProcessing={isProcessing}/>
+                <ProcessingLogsSection logs={logs} isProcessing={isProcessing} summary={summary}/>
                 <ProcessingHistorySection/>
 
-                <ResultSection downloadUrl={downloadUrl} selectedFile={selectedFile}/>
+                <ResultSection
+                    downloadUrl={downloadUrl}
+                    selectedFile={selectedFile}
+                />
             </div>
         </div>
     );
