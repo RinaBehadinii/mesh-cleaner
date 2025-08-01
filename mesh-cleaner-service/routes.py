@@ -52,7 +52,7 @@ async def clean_mesh(
     save_log_to_db(output_filename, logs)
     summary, grouped_logs = transform_logs(logs)
 
-    background_tasks.add_task(clean_files, [input_path, output_path])
+    clean_files([input_path, output_path])
 
     return JSONResponse(
         content={
