@@ -16,12 +16,9 @@ export type StructuredLog = {
 
     bounding_box?: {
         before?: {
-            min_x: number;
-            min_y: number;
-            min_z: number;
-            max_x: number;
-            max_y: number;
-            max_z: number;
+            width: number;
+            height: number;
+            depth: number;
         };
         after?: {
             width: number;

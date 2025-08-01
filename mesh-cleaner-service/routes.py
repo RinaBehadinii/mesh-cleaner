@@ -93,47 +93,55 @@ def save_log_to_db(filename: str, logs: list[dict]):
         return
 
     first = next(
-        (log for log in logs if log.get("input_faces") is not None and log.get("input_vertices") is not None),
+        (log for log in logs
+         if log.get("input_faces") is not None and log.get("input_vertices") is not None),
         logs[0]
     )
-
     last = next(
-        (log for log in reversed(logs) if
-         log.get("output_faces") is not None and log.get("output_vertices") is not None),
+        (log for log in reversed(logs)
+         if log.get("output_faces") is not None and log.get("output_vertices") is not None),
         logs[-1]
     )
 
     mesh_stats = {
         "faces": {
-            "input": first["input_faces"],
-            "output": last["output_faces"]
+            "input": first.get("input_faces"),
+            "output": last.get("output_faces")
         },
         "vertices": {
-            "input": first["input_vertices"],
-            "output": last["output_vertices"]
+            "input": first.get("input_vertices"),
+            "output": last.get("output_vertices")
         }
     }
 
-    bounding_box_before = next((log.get("bounding_box_before") for log in logs if "bounding_box_before" in log), None)
-    bounding_box_after = next((log.get("bounding_box_after") for log in reversed(logs) if "bounding_box_after" in log),
-                              None)
+    bounding_box_before = next(
+        (log.get("bounding_box_before") for log in logs if log.get("bounding_box_before")),
+        None
+    )
+    bounding_box_after = next(
+        (log.get("bounding_box_after") for log in reversed(logs) if log.get("bounding_box_after")),
+        None
+    )
 
     bounding_box = None
-    if bounding_box_before and isinstance(bounding_box_before, (list, tuple)) and len(bounding_box_before) == 6:
-        min_x, min_y, min_z, max_x, max_y, max_z = bounding_box_before
+    if isinstance(bounding_box_before, (list, tuple)) and len(bounding_box_before) == 3:
+        width_before, height_before, depth_before = bounding_box_before
         bounding_box = {
             "before": {
-                "min_x": min_x, "min_y": min_y, "min_z": min_z,
-                "max_x": max_x, "max_y": max_y, "max_z": max_z
+                "width": width_before,
+                "height": height_before,
+                "depth": depth_before,
             }
         }
 
-    if bounding_box_after and isinstance(bounding_box_after, (list, tuple)) and len(bounding_box_after) == 3:
-        width, height, depth = bounding_box_after
+    if isinstance(bounding_box_after, (list, tuple)) and len(bounding_box_after) == 3:
+        width_after, height_after, depth_after = bounding_box_after
         if bounding_box is None:
             bounding_box = {}
         bounding_box["after"] = {
-            "width": width, "height": height, "depth": depth
+            "width": width_after,
+            "height": height_after,
+            "depth": depth_after,
         }
 
     db = SessionLocal()

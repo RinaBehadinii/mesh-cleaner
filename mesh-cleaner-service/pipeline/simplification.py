@@ -1,13 +1,6 @@
 import pymeshlab
 from .logging_utils import StepLogger
-
-
-def get_bounding_box_dimensions(ms: pymeshlab.MeshSet):
-    bb = ms.current_mesh().bounding_box()
-    min_coords = bb.min()
-    max_coords = bb.max()
-    dims = [round(max_coords[i] - min_coords[i], 6) for i in range(3)]
-    return tuple(dims)
+from .utils import get_bounding_box_dimensions
 
 
 def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
@@ -18,7 +11,7 @@ def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
 
     initial_faces = ms.current_mesh().face_number()
     initial_vertices = ms.current_mesh().vertex_number()
-    initial_bbox = get_bounding_box_dimensions(ms)
+    initial_dims = get_bounding_box_dimensions(ms)
 
     try:
         ms.apply_filter(
@@ -29,7 +22,7 @@ def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
 
         final_faces = ms.current_mesh().face_number()
         final_vertices = ms.current_mesh().vertex_number()
-        final_bbox = get_bounding_box_dimensions(ms)
+        final_dims = get_bounding_box_dimensions(ms)
 
         result = (
             "Simplification successful"
@@ -44,8 +37,8 @@ def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
             output_vertices=final_vertices,
             input_faces=initial_faces,
             output_faces=final_faces,
-            bounding_box_before=initial_bbox,
-            bounding_box_after=final_bbox,
+            bounding_box_before=initial_dims,
+            bounding_box_after=final_dims,
             result=result
         )
 
@@ -55,6 +48,6 @@ def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
             step="Quadric Edge Collapse",
             input_vertices=initial_vertices,
             input_faces=initial_faces,
-            bounding_box_before=initial_bbox,
+            bounding_box_before=initial_dims,
             result=f"Skipped: {e}"
         )

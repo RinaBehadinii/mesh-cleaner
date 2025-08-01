@@ -1,15 +1,6 @@
 import pymeshlab
 from .logging_utils import StepLogger
-
-
-def get_bounding_box(ms: pymeshlab.MeshSet):
-    bb = ms.current_mesh().bounding_box()
-    min_coords = bb.min()
-    max_coords = bb.max()
-    return (
-        min_coords[0], min_coords[1], min_coords[2],
-        max_coords[0], max_coords[1], max_coords[2]
-    )
+from .utils import get_bounding_box_dimensions
 
 
 def run_smoothing(ms: pymeshlab.MeshSet, photogrammetry: bool = False, logger: StepLogger = None):
@@ -17,30 +8,47 @@ def run_smoothing(ms: pymeshlab.MeshSet, photogrammetry: bool = False, logger: S
         return
 
     try:
-        before_bbox = get_bounding_box(ms)
+        v_before = ms.current_mesh().vertex_number()
+        f_before = ms.current_mesh().face_number()
+        dims_before = get_bounding_box_dimensions(ms)
 
         ms.apply_coord_hc_laplacian_smoothing()
-        after_bbox = get_bounding_box(ms)
+        v_after = ms.current_mesh().vertex_number()
+        f_after = ms.current_mesh().face_number()
+        dims_after = get_bounding_box_dimensions(ms)
 
         logger.add_step(
             action="smoothing",
             step="HC Laplacian Smoothing",
-            bounding_box_before=before_bbox,
-            bounding_box_after=after_bbox,
+            input_vertices=v_before,
+            output_vertices=v_after,
+            input_faces=f_before,
+            output_faces=f_after,
+            bounding_box_before=dims_before,
+            bounding_box_after=dims_after,
             result="Applied HC Laplacian smoothing"
         )
 
         if photogrammetry:
-            before_bbox = get_bounding_box(ms)
+            v_before = ms.current_mesh().vertex_number()
+            f_before = ms.current_mesh().face_number()
+            dims_before = get_bounding_box_dimensions(ms)
+
             ms.apply_coord_laplacian_smoothing_surface_preserving()
-            after_bbox = get_bounding_box(ms)
+            v_after = ms.current_mesh().vertex_number()
+            f_after = ms.current_mesh().face_number()
+            dims_after = get_bounding_box_dimensions(ms)
 
             logger.add_step(
                 action="smoothing",
-                step="Surface-Preserving Smoothing",
-                bounding_box_before=before_bbox,
-                bounding_box_after=after_bbox,
-                result="Applied Surface-Preserving smoothing"
+                step="Surface‑Preserving Smoothing",
+                input_vertices=v_before,
+                output_vertices=v_after,
+                input_faces=f_before,
+                output_faces=f_after,
+                bounding_box_before=dims_before,
+                bounding_box_after=dims_after,
+                result="Applied Surface‑Preserving smoothing"
             )
 
     except pymeshlab.PyMeshLabException as e:

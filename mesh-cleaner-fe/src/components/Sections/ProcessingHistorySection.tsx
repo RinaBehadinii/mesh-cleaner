@@ -1,30 +1,16 @@
 import {useEffect, useState} from "react";
 import {StructuredLog} from "../../types";
 
-function formatBoundingBoxBefore(before?: any): string {
-    if (!before) return "–";
-
-    const {min_x, min_y, min_z, max_x, max_y, max_z} = before;
-    return [
-        min_x?.toFixed(2),
-        min_y?.toFixed(2),
-        min_z?.toFixed(2),
-        max_x?.toFixed(2),
-        max_y?.toFixed(2),
-        max_z?.toFixed(2),
-    ].join(", ");
-}
-
-function formatBoundingBoxAfter(after?: any): string {
-    if (!after) return "–";
-
-    const {width, height, depth} = after;
+function formatBoundingBox(box?: any): string {
+    if (!box) return "–";
+    const {width, height, depth} = box;
     return [
         width?.toFixed(2),
         height?.toFixed(2),
         depth?.toFixed(2),
     ].join(", ");
 }
+
 
 export function ProcessingHistorySection() {
     const [isOpen, setIsOpen] = useState(false);
@@ -102,10 +88,10 @@ export function ProcessingHistorySection() {
                                         <td className="px-2 py-1 border-b border-gray-200">{vertices.output ?? "–"}</td>
                                         <td className="px-2 py-1 border-b border-gray-200">{deltaVertices}</td>
                                         <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[250px]">
-                                            {formatBoundingBoxBefore(log.bounding_box?.before)}
+                                            {formatBoundingBox(log.bounding_box?.before)}
                                         </td>
                                         <td className="px-2 py-1 border-b border-gray-200 break-words whitespace-normal max-w-[250px]">
-                                            {formatBoundingBoxAfter(log.bounding_box?.after)}
+                                            {formatBoundingBox(log.bounding_box?.after)}
                                         </td>
                                         <td className="px-2 py-1 border-b border-gray-200">
                                             {new Date(log.timestamp || "").toLocaleString("en-GB", {
