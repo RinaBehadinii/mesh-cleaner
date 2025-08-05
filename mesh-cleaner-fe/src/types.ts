@@ -65,7 +65,7 @@ export type Summary = {
 
 export type CleanMeshResponse = {
     filename: string;
-    filedata: string | null;
+    download_url: string;
     summary: Summary;
     logs: Record<string, StepLog[]>;
 };

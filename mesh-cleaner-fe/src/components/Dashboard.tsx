@@ -15,6 +15,7 @@ export function Dashboard() {
         downloadUrl,
         handleUpload,
         reset,
+        filename
     } = useCleanMesh();
 
     const onSetSelectedFile = (file: File | null) => {
@@ -40,7 +41,7 @@ export function Dashboard() {
                 />
 
                 <ProcessingLogsSection logs={logs} isProcessing={isProcessing} summary={summary}/>
-                <ResultSection downloadUrl={downloadUrl} selectedFile={selectedFile}/>
+                <ResultSection downloadUrl={downloadUrl} filename={filename}/>
             </div>
         </div>
     );
