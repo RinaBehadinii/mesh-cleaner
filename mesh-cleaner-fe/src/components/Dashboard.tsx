@@ -1,122 +1,26 @@
 import {useState} from "react";
-import {Header} from "./Sections/Header";
-import {UploadMeshSection} from "./Sections/UploadMeshSection";
-import {ProcessingLogsSection} from "./Sections/ProcessingLogsSection";
-import {ResultSection} from "./Sections/ResultSection";
-import {StepLog} from "../types";
-import {ProcessingHistorySection} from "./Sections/ProcessingHistorySection";
+import {Header} from "./sections/Header";
+import {UploadMeshSection} from "./sections/UploadMeshSection";
+import {ProcessingLogsSection} from "./sections/processingLogSection/ProcessingLogsSection";
+import {ResultSection} from "./sections/ResultSection";
+import {useCleanMesh} from "../hooks/useCleanMesh";
 
 export function Dashboard() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [logs, setLogs] = useState<StepLog[]>([]);
-    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [summary, setSummary] = useState<any | null>(null);
+
+    const {
+        isProcessing,
+        logs,
+        summary,
+        downloadUrl,
+        handleUpload,
+        reset,
+        filename
+    } = useCleanMesh();
 
     const onSetSelectedFile = (file: File | null) => {
         setSelectedFile(file);
-        setLogs([]);
-        setSummary(null);
-    };
-
-    const flattenLogs = (logObject: any): StepLog[] => {
-        const allLogs: StepLog[] = [];
-
-        for (const section of Object.keys(logObject)) {
-            const steps = logObject[section];
-            for (const step of steps) {
-                allLogs.push({
-                    action: section,
-                    ...step,
-                });
-            }
-        }
-
-        return allLogs;
-    };
-
-    const handleUpload = async () => {
-        if (!selectedFile) return;
-
-        setIsProcessing(true);
-        setLogs([]);
-        setSummary(null);
-
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-
-        try {
-            const res = await fetch("http://localhost:8000/clean-mesh", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!res.ok) {
-                const err = await res.json();
-                setIsProcessing(false);
-                setLogs((prev) => [
-                    ...prev,
-                    {
-                        action: "client",
-                        step: "Upload",
-                        result: `Error: ${err.error || res.statusText}`,
-                        input_vertices: null,
-                        output_vertices: null,
-                        input_faces: null,
-                        output_faces: null,
-                    },
-                ]);
-                return;
-            }
-
-            const result = await res.json();
-            setIsProcessing(false);
-
-            setSummary(result.summary || null);
-
-            if (result.logs) {
-                const flattened = flattenLogs(result.logs);
-                setLogs(flattened);
-            }
-
-            if (result.filedata) {
-                const byteCharacters = atob(result.filedata);
-                const byteNumbers = Array.from(byteCharacters).map((char) =>
-                    char.charCodeAt(0)
-                );
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], {type: "application/octet-stream"});
-                const url = window.URL.createObjectURL(blob);
-                setDownloadUrl(url);
-
-                setLogs((prev) => [
-                    ...prev,
-                    {
-                        action: "client",
-                        step: "Download",
-                        result: "Cleaned mesh received successfully",
-                        input_vertices: null,
-                        output_vertices: null,
-                        input_faces: null,
-                        output_faces: null,
-                    },
-                ]);
-            }
-        } catch (error) {
-            setIsProcessing(false);
-            setLogs((prev) => [
-                ...prev,
-                {
-                    action: "client",
-                    step: "Upload",
-                    result: `Error: ${String(error)}`,
-                    input_vertices: null,
-                    output_vertices: null,
-                    input_faces: null,
-                    output_faces: null,
-                },
-            ]);
-        }
+        reset();
     };
 
     return (
@@ -127,7 +31,7 @@ export function Dashboard() {
                 <UploadMeshSection
                     selectedFile={selectedFile}
                     onFileChange={onSetSelectedFile}
-                    onUpload={handleUpload}
+                    onUpload={() => handleUpload(selectedFile)}
                     onDrop={(e) => {
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
@@ -137,12 +41,7 @@ export function Dashboard() {
                 />
 
                 <ProcessingLogsSection logs={logs} isProcessing={isProcessing} summary={summary}/>
-                <ProcessingHistorySection/>
-
-                <ResultSection
-                    downloadUrl={downloadUrl}
-                    selectedFile={selectedFile}
-                />
+                <ResultSection downloadUrl={downloadUrl} filename={filename}/>
             </div>
         </div>
     );

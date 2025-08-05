@@ -1,10 +1,12 @@
+import {BASE_URL} from "../../api/apiClient";
+
 type ResultSectionProps = {
     downloadUrl: string | null;
-    selectedFile: File | null;
+    filename: string | null;
 };
 
-export function ResultSection({downloadUrl, selectedFile}: ResultSectionProps) {
-    const disabled = !downloadUrl || !selectedFile;
+export function ResultSection({downloadUrl, filename}: ResultSectionProps) {
+    const disabled = !downloadUrl || !filename;
 
     return (
         <div className="bg-white p-8 rounded-2xl shadow-lg space-y-5">
@@ -16,13 +18,15 @@ export function ResultSection({downloadUrl, selectedFile}: ResultSectionProps) {
             </p>
             <div className="flex justify-center mt-4 gap-4 flex-wrap">
                 <a
-                    href={downloadUrl ?? "#"}
-                    download={selectedFile?.name.replace(".obj", "_cleaned.obj")}
+                    href={`${BASE_URL}${downloadUrl}` ?? "#"}
+                    download={filename ?? undefined}
                     className={`px-6 py-2 rounded-lg text-sm font-semibold transition
-            ${disabled
+                        ${disabled
                         ? "bg-purple-300 text-white cursor-not-allowed pointer-events-none"
                         : "bg-purple-600 text-white hover:bg-purple-700 cursor-pointer"
                     }`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                 >
                     Download Cleaned Mesh
                 </a>
