@@ -57,7 +57,8 @@ async def clean_mesh(file: UploadFile = File(...)):
 def download_mesh(filename: str):
     file_path = os.path.join(OUTPUT_DIR, filename)
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Mesh file not found")
+        static_error_path = os.path.join("static", "mesh-expired.html")
+        return FileResponse(static_error_path, status_code=410, media_type="text/html")
     return FileResponse(file_path, media_type="application/octet-stream", filename=filename)
 
 

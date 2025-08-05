@@ -5,9 +5,10 @@ from database import Base, engine
 import threading
 import time
 import os
+from fastapi.staticfiles import StaticFiles
 
 OUTPUT_DIR = "meshes/output"
-MAX_FILE_AGE_SECONDS = 120
+MAX_FILE_AGE_SECONDS = 600
 
 
 def cleanup_output_dir(output_dir, max_age_seconds=MAX_FILE_AGE_SECONDS):
@@ -22,7 +23,7 @@ def cleanup_output_dir(output_dir, max_age_seconds=MAX_FILE_AGE_SECONDS):
                         print(f"Deleted old mesh file: {file_path}")
                     except Exception as e:
                         print(f"Error deleting {file_path}: {e}")
-        time.sleep(30)
+        time.sleep(600)
 
 
 threading.Thread(target=cleanup_output_dir, args=(OUTPUT_DIR,), daemon=True).start()
@@ -40,3 +41,5 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
