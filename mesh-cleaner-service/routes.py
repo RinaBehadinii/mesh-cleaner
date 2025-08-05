@@ -6,6 +6,8 @@ from pipeline.runner import process_mesh_and_capture_logs
 from utils import save_log_to_db, clean_files, transform_logs
 from database import SessionLocal
 from models import MeshLog
+from typing import List
+from schemas import CleanMeshResponse, StructuredLog
 
 router = APIRouter()
 
@@ -16,10 +18,8 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-@router.post("/clean-mesh")
-async def clean_mesh(
-        file: UploadFile = File(...),
-):
+@router.post("/clean-mesh", response_model=CleanMeshResponse)
+async def clean_mesh(file: UploadFile = File(...)):
     unique_name = uuid4().hex
     input_filename = f"{unique_name}_{file.filename}"
     input_path = os.path.join(UPLOAD_DIR, input_filename)
@@ -43,17 +43,14 @@ async def clean_mesh(
 
     save_log_to_db(output_filename, logs)
     summary, grouped_logs = transform_logs(logs)
-
     clean_files([input_path])
 
-    return JSONResponse(
-        content={
-            "filename": output_filename,
-            "download_url": f"/download-mesh/{output_filename}",
-            "summary": summary,
-            "logs": grouped_logs,
-        }
-    )
+    return {
+        "filename": output_filename,
+        "download_url": f"/download-mesh/{output_filename}",
+        "summary": summary,
+        "logs": grouped_logs,
+    }
 
 
 @router.get("/download-mesh/{filename}")
@@ -64,12 +61,12 @@ def download_mesh(filename: str):
     return FileResponse(file_path, media_type="application/octet-stream", filename=filename)
 
 
-@router.get("/logs")
+@router.get("/logs", response_model=List[StructuredLog])
 def get_all_mesh_logs():
     db = SessionLocal()
     try:
         records = db.query(MeshLog).order_by(MeshLog.timestamp.desc()).all()
-        return JSONResponse(content=[
+        return [
             {
                 "id": log.id,
                 "filename": log.filename,
@@ -78,6 +75,6 @@ def get_all_mesh_logs():
                 "bounding_box": log.bounding_box,
             }
             for log in records
-        ])
+        ]
     finally:
         db.close()
