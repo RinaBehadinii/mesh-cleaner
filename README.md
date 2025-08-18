@@ -37,8 +37,8 @@ A full-stack application for uploading, processing, and downloading 3D mesh file
 
 1. **Clone the repository:**
     ```sh
-    git clone <your-repo-url>
-    cd <project-root>
+    git clone https://github.com/RinaBehadinii/mesh-cleaner
+    cd mesh-cleaner
     ```
 
 2. **Build and start all services:**
