@@ -38,6 +38,7 @@ export function Dashboard() {
                         if (file) onSetSelectedFile(file);
                     }}
                     onDragOver={(e) => e.preventDefault()}
+                    isProcessing={isProcessing}
                 />
 
                 <ProcessingLogsSection logs={logs} isProcessing={isProcessing} summary={summary}/>
