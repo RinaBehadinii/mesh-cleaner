@@ -33,7 +33,7 @@ export function ProcessingLogsSection({
                 {!isProcessing && summary && <LogSummary summary={summary}/>}
             </div>
 
-            <ProcessingHistoryModal/>
+            <ProcessingHistoryModal isProcessing={isProcessing}/>
         </div>
     );
 }

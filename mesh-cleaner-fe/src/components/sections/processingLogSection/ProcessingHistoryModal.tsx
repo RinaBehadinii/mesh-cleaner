@@ -3,16 +3,25 @@ import {formatBoundingBox} from "../../../utils/logs.util";
 import {useGetLogs} from "../../../hooks/useGetLogs";
 import {Modal} from "../../../shared-components/Modal";
 
-export function ProcessingHistoryModal() {
+type ProcessingHistoryModalProps = {
+    isProcessing: boolean;
+};
+
+export function ProcessingHistoryModal({isProcessing}: ProcessingHistoryModalProps) {
     const [isOpen, setIsOpen] = useState(false);
     const {logs: history, loading,} = useGetLogs(isOpen);
 
     return (
         <div className="flex justify-end w-full">
             <button
+                disabled={isProcessing}
                 onClick={() => setIsOpen(true)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold transition bg-purple-600 text-white hover:bg-purple-700 cursor-pointer"
-            >
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition 
+                            ${
+                    !isProcessing
+                        ? "bg-purple-600 text-white hover:bg-purple-700 cursor-pointer"
+                        : "bg-purple-300 text-white cursor-not-allowed"
+                }`}>
                 View All Processing History
             </button>
 
