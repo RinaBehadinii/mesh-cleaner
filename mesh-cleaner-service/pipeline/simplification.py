@@ -17,7 +17,11 @@ def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
         ms.apply_filter(
             "meshing_decimation_quadric_edge_collapse",
             targetfacenum=int(initial_faces * 0.5),
-            preservenormal=True
+            preservenormal=True,
+            preservetopology=True,
+            optimalplacement=True,
+            clean=True,
+            qualitythr=0.3
         )
 
         final_faces = ms.current_mesh().face_number()
