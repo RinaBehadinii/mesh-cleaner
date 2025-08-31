@@ -9,7 +9,7 @@ def process_mesh_and_capture_logs(input_path: str, output_path: str):
     ms = pymeshlab.MeshSet()
     ms.load_new_mesh(input_path)
 
-    run_all_filters(ms, photogrammetry=True, logger=logger)
+    run_all_filters(ms, logger=logger)
 
     ms.save_current_mesh(output_path)
 
