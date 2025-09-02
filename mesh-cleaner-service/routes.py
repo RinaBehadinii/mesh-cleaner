@@ -11,8 +11,8 @@ from schemas import CleanMeshResponse, StructuredLog
 
 router = APIRouter()
 
-UPLOAD_DIR = "meshes/input"
-OUTPUT_DIR = "meshes/output"
+UPLOAD_DIR = os.environ["UPLOAD_DIR"]
+OUTPUT_DIR = os.environ["OUTPUT_DIR"]
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
