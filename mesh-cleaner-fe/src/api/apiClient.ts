@@ -1,4 +1,4 @@
-export const BASE_URL = "http://localhost:8000";
+export const BASE_URL = process.env.REACT_APP_API_URL!;
 
 export async function postForm<T>(endpoint: string, formData: FormData): Promise<T> {
     const res = await fetch(`${BASE_URL}${endpoint}`, {

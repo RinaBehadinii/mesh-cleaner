@@ -3,7 +3,7 @@ from .cleanup import run_advanced_cleanup
 from .hole_filling import run_hole_filling
 from .smoothing import run_smoothing
 from .simplification import run_simplification
-from .logging_utils import StepLogger  # Adjust if needed
+from .logging_utils import StepLogger
 
 
 def run_all_filters(ms: pymeshlab.MeshSet, *, logger: StepLogger):

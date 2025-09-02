@@ -32,9 +32,11 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+frontend_url = os.environ["FRONTEND_URL"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
