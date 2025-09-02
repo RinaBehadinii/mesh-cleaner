@@ -41,18 +41,33 @@ A full-stack application for uploading, processing, and downloading 3D mesh file
     cd mesh-cleaner
     ```
 
-2. **Build and start all services:**
+2. **Set up environment variables:**
+    - Copy the example environment file:
+      ```sh
+      cp .env.example .env
+      ```
+    - Open `.env` and fill in the required values (database username, password, etc.).
+    - Example entries already include safe defaults for ports and directories.
+
+3. **Build and start all services:**
     ```sh
     docker-compose up --build
     ```
 
-3. **Access the applications:**
+4. **Access the applications:**
     - Frontend: [http://localhost:3000](http://localhost:3000)
     - Backend API & docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-4. **Stopping & Cleaning Up:**
+5. **Stopping & Cleaning Up:**
     ```sh
     docker-compose down -v
     ```
 
+---
 
+## Notes
+
+- All configuration is managed through the `.env` file.
+- The backend will fail to start if required variables (e.g., `DATABASE_URL`, `UPLOAD_DIR`, `OUTPUT_DIR`,
+  `FRONTEND_URL`) are missing.
+- Database credentials must be set by each developer or deployment environment.
