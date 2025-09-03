@@ -20,7 +20,7 @@ def run_simplification(ms: pymeshlab.MeshSet, logger: StepLogger = None):
             preservenormal=True,
             preservetopology=True,
             optimalplacement=True,
-            clean=True,
+            autoclean=True,
             qualitythr=0.3
         )
 
