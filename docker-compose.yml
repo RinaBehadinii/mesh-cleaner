@@ -16,7 +16,8 @@ services:
       OUTPUT_DIR: ${OUTPUT_DIR}
       FRONTEND_URL: ${FRONTEND_URL}
     depends_on:
-      - mesh-cleaner-db
+      mesh-cleaner-db:
+        condition: service_healthy
 
   mesh-cleaner-frontend:
     container_name: mesh-cleaner-fe
@@ -39,6 +40,11 @@ services:
       - mesh_cleaner_db_data:/var/lib/postgresql/data
     ports:
       - "${MESH_CLEANER_DB_PORT}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      retries: 5
+      start_period: 5s
 
 volumes:
   mesh_cleaner_db_data:
