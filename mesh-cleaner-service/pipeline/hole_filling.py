@@ -3,7 +3,7 @@ from .logging_utils import StepLogger
 from .utils import get_bounding_box_dimensions
 
 
-def run_hole_filling(ms: pymeshlab.MeshSet, max_hole_size: int = 100, logger: StepLogger = None):
+def run_hole_filling(ms: pymeshlab.MeshSet, max_hole_size: int = 30, logger: StepLogger = None):
     if logger is None:
         return
 
